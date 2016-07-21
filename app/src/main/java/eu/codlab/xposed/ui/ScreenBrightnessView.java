@@ -13,7 +13,7 @@ import android.view.WindowManager;
  * Created by kevinleperf on 20/07/2016.
  */
 
-public class TouchView extends View {
+public class ScreenBrightnessView extends View {
 
     private enum State {
         LIGHT,
@@ -44,7 +44,7 @@ public class TouchView extends View {
         }
     };
 
-    public TouchView(Context context) {
+    public ScreenBrightnessView(Context context) {
         super(context);
 
         _handler = new Handler();
@@ -66,6 +66,12 @@ public class TouchView extends View {
         _current_state = State.DARK;
         _handler.removeCallbacks(_runnable);
         _timeout = 0;
+
+        try {
+            getLock(getContext()).release();
+        } catch (Exception e) {
+
+        }
     }
 
     private void resetMode() {
@@ -88,11 +94,6 @@ public class TouchView extends View {
         Log.d("PokemonGO", "setDarkMode");
         _current_state = State.DARK;
         _handler.removeCallbacks(_runnable);
-        try {
-            getLock(getContext()).release();
-        } catch (Exception e) {
-
-        }
         setLuminosity(10);
     }
 

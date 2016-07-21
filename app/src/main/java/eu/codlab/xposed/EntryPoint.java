@@ -9,6 +9,9 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -21,7 +24,6 @@ import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import eu.codlab.MapObject;
-import eu.codlab.PublicProto;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
@@ -46,8 +48,6 @@ public class EntryPoint implements IXposedHookLoadPackage {
             }
         });
     }
-
-    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
     public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 2);
@@ -191,17 +191,33 @@ public class EntryPoint implements IXposedHookLoadPackage {
 
                         String res = bytesToHex(bytes);
 
-                        Log.d("PokemonGO", "printf \"" + res + "\" > file");
-                        Log.d("PokemonGO", "array? bytes 1 := " + length + " " + Arrays.toString(bytes));
 
                         try {
                             MapObject.MapObjectsResponse env = MapObject.MapObjectsResponse.parseFrom(bytes);
                             if (env != null) {
 
+                                File yourFile = new File("/data/data/" + mActivity.getPackageName() + "/" + System.currentTimeMillis() + ".bin");
+                                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(yourFile));
+                                bos.write(bytes);
+                                bos.flush();
+                                bos.close();
+
+                                Log.d("PokemonGO", "printf \"" + res + "\" > file");
+                                Log.d("PokemonGO", "adb pull " + yourFile.getAbsolutePath() + " .");//length + " " + Arrays.toString(bytes));
+
                                 String output = "";
                                 List<MapObject.MapObjectsResponse.Payload> payloads = env.getPayloadList();
                                 for (MapObject.MapObjectsResponse.Payload payload : payloads) {
                                     for (MapObject.MapObjectsResponse.Payload.ClientMapCell map : payload.getProfileList()) {
+
+
+                                        //repeated PokemonFortProto Fort = 3;
+                                        //repeated ClientSpawnPointProto SpawnPoint = 4;
+                                        for (MapObject.MapObjectsResponse.Payload.ClientSpawnPointProto spawn : map.getSpawnPointList()) {
+                                            output += "MAPPROTO spawn point " + spawn.getLatitude() + " " + spawn.getLongitude() + "\n";
+                                        }
+
+                                        //repeated WildPokemonProto WildPokemon = 5;
                                         for (MapObject.MapObjectsResponse.Payload.WildPokemonProto pokemon : map.getWildPokemonList()) {
                                             double latitude = pokemon.getLatitude();
                                             double longitude = pokemon.getLongitude();
@@ -210,38 +226,28 @@ public class EntryPoint implements IXposedHookLoadPackage {
 
                                             output += "MAPPROTO having pokemon " + id + " " + latitude + " " + longitude + "\n";
                                         }
+                                        //unknown DeletedObject = 6;
+                                        //bool IsTruncatedList = 7;
+                                        //repeated PokemonSummaryFortProto FortSummary = 8;
+                                        //repeated ClientSpawnPointProto DecimatedSpawnPoint = 9;
 
+                                        //repeated MapPokemonProto MapPokemon = 10;
                                         for (MapObject.MapObjectsResponse.Payload.MapPokemonProto maproto : map.getMapPokemonList()) {
                                             output += "MAPPROTO map proto " + maproto.getPokedexTypeId().getNumber() + " " + maproto.getLatitude() + " " + maproto.getLongitude() + "\n";
                                         }
 
-                                        for (MapObject.MapObjectsResponse.Payload.ClientSpawnPointProto spawn : map.getSpawnPointList()) {
-                                            output += "MAPPROTO spawn point " + spawn.getLatitude() + " " + spawn.getLongitude() + "\n";
-                                        }
-
+                                        //repeated NearbyPokemonProto NearbyPokemon = 11;
                                         for (MapObject.MapObjectsResponse.Payload.NearbyPokemonProto nearby : map.getNearbyPokemonList()) {
                                             output += "MAPPROTO pokemon " + nearby.getPokedexNumber() + " " + nearby.getDistanceMeters() + "\n";
                                         }
                                     }
                                 }
 
-                                if (mActivity != null) outputLog(mActivity, output);
+                                if (mActivity != null && output.length() > 0)
+                                    outputLog(mActivity, output);
                             }
                         } catch (Exception e) {
 
-                        }
-                        try {
-                            PublicProto.ResponseEnvelop env = PublicProto.ResponseEnvelop.parseFrom(bytes);
-
-                            PublicProto.ResponseEnvelop.Unknown7 unk7 = env.getUnknown7();
-                            if (unk7 != null) {
-                                Log.d("PokemonGO", "unknown 7 bytes 1 " + bytesToHex(unk7.getUnknown71().toByteArray()));
-                                Log.d("PokemonGO", "unknown 7 bytes 2 " + unk7.getUnknown72());
-                                Log.d("PokemonGO", "unknown 7 bytes 3 " + bytesToHex(unk7.getUnknown73().toByteArray()));
-                            }
-                        } catch (Exception e) {
-                            Log.d("PokemonGO", "having issue with current element");
-                            e.printStackTrace();
                         }
                     }
 
