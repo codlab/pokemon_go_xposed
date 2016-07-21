@@ -2,6 +2,7 @@ package eu.codlab.xposed;
 
 import android.app.Activity;
 import android.content.Context;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -22,8 +23,10 @@ import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import eu.codlab.MapObject;
+import eu.codlab.xposed.managers.ManageTopActivity;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
@@ -35,6 +38,7 @@ public class EntryPoint implements IXposedHookLoadPackage {
 
     private Handler _handler;
     private Activity mActivity;
+    private Location mLocation;
 
     private void outputLog(final Context context, final String string) {
         if (_handler == null) {
@@ -71,6 +75,7 @@ public class EntryPoint implements IXposedHookLoadPackage {
         final Class Status = loadPackageParam.classLoader.loadClass("com.nianticlabs.nia.account.NianticAccountManager$Status");
         final Class NianticAccountManager = loadPackageParam.classLoader.loadClass("com.nianticlabs.nia.account.NianticAccountManager");
         final Class NiaNet = loadPackageParam.classLoader.loadClass("com.nianticlabs.nia.network.NiaNet");
+        final Class NianticLocationManager = loadPackageParam.classLoader.loadClass("com.nianticlabs.nia.location.NianticLocationManager");
 
         final ManageTopActivity activity_manager = new ManageTopActivity();
 
@@ -90,6 +95,24 @@ public class EntryPoint implements IXposedHookLoadPackage {
         }
 
         try {
+
+            findAndHookMethod(NianticLocationManager, "locationUpdate", Location.class, int[].class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    Location current = null;
+
+                    for (Object p : param.args) {
+                        if (p instanceof Location) {
+                            current = (Location) p;
+                        }
+                    }
+
+                    mLocation = new Location(current);
+
+                    super.beforeHookedMethod(param);
+                }
+            });
+
             findAndHookMethod(activity, "onCreate", Bundle.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -225,6 +248,8 @@ public class EntryPoint implements IXposedHookLoadPackage {
                                             int id = mon.getPokemonId();
 
                                             output += "MAPPROTO having pokemon " + id + " " + latitude + " " + longitude + "\n";
+
+                                            activity_manager.onPokemonSpawn(pokemon.getEncounterId(), id, latitude, longitude);
                                         }
                                         //unknown DeletedObject = 6;
                                         //bool IsTruncatedList = 7;
@@ -234,11 +259,16 @@ public class EntryPoint implements IXposedHookLoadPackage {
                                         //repeated MapPokemonProto MapPokemon = 10;
                                         for (MapObject.MapObjectsResponse.Payload.MapPokemonProto maproto : map.getMapPokemonList()) {
                                             output += "MAPPROTO map proto " + maproto.getPokedexTypeId().getNumber() + " " + maproto.getLatitude() + " " + maproto.getLongitude() + "\n";
+
+                                            activity_manager.onPokemonSpawn(-1, maproto.getPokedexTypeId().getNumber(), maproto.getLatitude(), maproto.getLongitude());
                                         }
 
                                         //repeated NearbyPokemonProto NearbyPokemon = 11;
                                         for (MapObject.MapObjectsResponse.Payload.NearbyPokemonProto nearby : map.getNearbyPokemonList()) {
                                             output += "MAPPROTO pokemon " + nearby.getPokedexNumber() + " " + nearby.getDistanceMeters() + "\n";
+                                            if (mLocation != null) {
+                                                activity_manager.onPokemonNearby(nearby.getPokedexNumber(), mLocation.getLatitude(), mLocation.getLongitude(), nearby.getDistanceMeters());
+                                            }
                                         }
                                     }
                                 }
@@ -247,7 +277,7 @@ public class EntryPoint implements IXposedHookLoadPackage {
                                     outputLog(mActivity, output);
                             }
                         } catch (Exception e) {
-
+                            e.printStackTrace();
                         }
                     }
 

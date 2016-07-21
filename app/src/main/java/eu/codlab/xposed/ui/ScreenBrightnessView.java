@@ -94,7 +94,7 @@ public class ScreenBrightnessView extends View {
         Log.d("PokemonGO", "setDarkMode");
         _current_state = State.DARK;
         _handler.removeCallbacks(_runnable);
-        setLuminosity(10);
+        setLuminosity(0);
     }
 
     private PowerManager.WakeLock getLock(Context context) {

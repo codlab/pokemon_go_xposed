@@ -1,4 +1,4 @@
-package eu.codlab.xposed;
+package eu.codlab.xposed.managers;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import eu.codlab.IPokemonGoService;
 import eu.codlab.IPokemonInteraction;
 import eu.codlab.go.PokemonGOService;
+import eu.codlab.xposed.ScreenBrightnessView;
 
 /**
  * Created by kevinleperf on 20/07/2016.
@@ -106,7 +107,7 @@ public class ManageTopActivity implements IPokemonInteraction {
     }
 
     @Override
-    public void onPokemonNearby(int id, float latitude, float longitude, float distance_meter) {
+    public void onPokemonNearby(int id, double latitude, double longitude, float distance_meter) {
         try {
             if (mService != null)
                 mService.onPokemonNearby(id, latitude, longitude, distance_meter);
@@ -116,7 +117,7 @@ public class ManageTopActivity implements IPokemonInteraction {
     }
 
     @Override
-    public void onPokemonSpawn(long encounter_id, int id, float latitude, float longitude) {
+    public void onPokemonSpawn(long encounter_id, int id, double latitude, double longitude) {
         try {
             if (mService != null)
                 mService.onPokemonSpawn(encounter_id, id, latitude, longitude);

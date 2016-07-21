@@ -5,7 +5,7 @@ package eu.codlab;
  */
 
 public interface IPokemonInteraction {
-    void onPokemonNearby(int id, float latitude, float longitude, float distance_meter);
+    void onPokemonNearby(int id, double latitude, double longitude, float distance_meter);
 
-    void onPokemonSpawn(long encounter_id, int id, float latitude, float longitude);
+    void onPokemonSpawn(long encounter_id, int id, double latitude, double longitude);
 }
