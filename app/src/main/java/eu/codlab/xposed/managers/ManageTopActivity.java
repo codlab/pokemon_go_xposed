@@ -15,7 +15,7 @@ import android.widget.LinearLayout;
 
 import eu.codlab.IPokemonGoService;
 import eu.codlab.IPokemonInteraction;
-import eu.codlab.go.PokemonGOService;
+import eu.codlab.go.service.PokemonGOService;
 import eu.codlab.xposed.ScreenBrightnessView;
 
 /**
@@ -101,7 +101,7 @@ public class ManageTopActivity implements IPokemonInteraction {
     }
 
     private Intent getServiceIntent() {
-        Intent intent = new Intent("eu.codlab.go.PokemonGOService");
+        Intent intent = new Intent("eu.codlab.go.service.PokemonGOService");
         intent.setClassName("eu.codlab.go", PokemonGOService.class.getName());
         return intent;
     }

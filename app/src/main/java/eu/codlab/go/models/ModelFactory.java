@@ -58,4 +58,9 @@ public final class ModelFactory {
         Log.d("PokemonGO", "saveNearBy " + nearby);
         nearby.save();
     }
+
+    public static List<Encounter> getWaitingEncounters() {
+        return new Select()
+                .from(Encounter.class).limit(30).queryList();
+    }
 }

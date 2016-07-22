@@ -87,7 +87,8 @@ public class ScreenBrightnessView extends View {
             }
         }
         _timeout = 30;
-        setLuminosity(255 / 2);
+        setLuminosity(255 / 4
+        );
     }
 
     private void setDarkMode() {

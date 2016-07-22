@@ -18,10 +18,10 @@
         </activity>
 
         <service
-            android:name="eu.codlab.go.PokemonGOService"
+            android:name="eu.codlab.go.service.PokemonGOService"
             android:exported="true">
             <intent-filter>
-                <action android:name="eu.codlab.go.PokemonGOService" />
+                <action android:name="eu.codlab.go.service.PokemonGOService" />
             </intent-filter>
         </service>
 
