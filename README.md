@@ -28,7 +28,7 @@ The module gives you the ability to :
 
 * It is very annoying to play with the game. And after few seconds, the screen goes off : no more, Pokémon spawn etc...
 
-** Othe
+** Other functionnality based in these (locally) aggregated data will be possible in the companion app.
 
 ## The app
 
